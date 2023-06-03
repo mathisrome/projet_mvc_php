@@ -62,6 +62,7 @@ class Router
     $constructorInfos = $classInfos->getConstructor();
     $contructorParams = $constructorInfos->getParameters();
 
+    $params = [];
     foreach ($contructorParams as $param) {
       $paramType = $param->getType();
       $typeName = $paramType->getName();
@@ -73,9 +74,10 @@ class Router
 
     $controllerInstance = new $controllerClass(...$params);
 
-    $methodInfos = new ReflectionMethod($controllerClass . '..' . $method);
+    $methodInfos = new ReflectionMethod($controllerClass . '::' . $method);
     $methodParams = $methodInfos->getParameters();
 
+    $params = [];
     foreach ($methodParams as $methodParam) {
       $paramType = $methodParam->getType();
       $typeName = $paramType->getName();
