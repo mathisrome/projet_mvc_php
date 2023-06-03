@@ -2,12 +2,13 @@
 
 namespace App\Routing;
 
+use ReflectionMethod;
 use Twig\Environment;
 
 class Router
 {
   public function __construct(
-    private Environment $twig
+    private array $services
   ) {
   }
 
@@ -54,10 +55,36 @@ class Router
       throw new RouteNotFoundException($requestUri, $httpMethod);
     }
 
-    $controller = $route['controller'];
+    $controllerClass = $route['controller'];
     $method = $route['method'];
 
-    $controllerInstance = new $controller($this->twig);
-    echo $controllerInstance->$method();
+    $classInfos = new \ReflectionClass($controllerClass);
+    $constructorInfos = $classInfos->getConstructor();
+    $contructorParams = $constructorInfos->getParameters();
+
+    foreach ($contructorParams as $param) {
+      $paramType = $param->getType();
+      $typeName = $paramType->getName();
+
+      if (array_key_exists($typeName, $this->services)) {
+        $params[] = $this->services[$typeName];
+      }
+    }
+
+    $controllerInstance = new $controllerClass(...$params);
+
+    $methodInfos = new ReflectionMethod($controllerClass . '..' . $method);
+    $methodParams = $methodInfos->getParameters();
+
+    foreach ($methodParams as $methodParam) {
+      $paramType = $methodParam->getType();
+      $typeName = $paramType->getName();
+
+      if (array_key_exists($typeName, $this->services)) {
+        $params[] = $this->services[$typeName];
+      }
+    }
+
+    echo $controllerInstance->$method(...$params);
   }
 }

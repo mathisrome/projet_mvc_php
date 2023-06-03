@@ -1,17 +1,23 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
+if (php_sapi_name() !== 'cli' && preg_match('/\.(png|ico|jpg|js|css)$/', $_SERVER['REQUEST_URI'])) {
+  return false;
+}
+
 // Initialisation de certaines choses
-use App\Controller\ContactController;
-use App\Controller\IndexController;
-use App\Routing\RouteNotFoundException;
-use App\Routing\Router;
-use Symfony\Component\Dotenv\Dotenv;
+use App\Entity\User;
 use Twig\Environment;
-use Twig\Loader\FilesystemLoader;
-use Doctrine\DBAL\DriverManager;
-use Doctrine\ORM\EntityManager;
+use App\Routing\Router;
 use Doctrine\ORM\ORMSetup;
+use Doctrine\ORM\EntityManager;
+use Doctrine\DBAL\DriverManager;
+use Twig\Loader\FilesystemLoader;
+use App\Controller\IndexController;
+use Symfony\Component\Dotenv\Dotenv;
+use App\Controller\ContactController;
+use App\Controller\UserController;
+use App\Routing\RouteNotFoundException;
 
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__ . '/../.env');
@@ -38,22 +44,26 @@ $dotenv->loadEnv(__DIR__ . '/../.env');
 
 // Create a simple "default" Doctrine ORM configuration for Attributes
 $config = ORMSetup::createAttributeMetadataConfiguration(
-    paths: array(__DIR__."/../src"),
-    isDevMode: $_ENV['APP_ENV'] === 'dev',
+  paths: array(__DIR__ . "/../src/Entity"),
+  isDevMode: $_ENV['APP_ENV'] === 'dev',
 );
 
 // configuring the database connection
 $connection = DriverManager::getConnection([
-    'host' => $host,
-    'driver' => 'pdo_mysql',
-    'user'     => $user,
-    'password' => $password,
-    'dbname'   => $dbname,
+  'host' => $host,
+  'port' => $port,
+  'driver' => 'pdo_mysql',
+  'user'     => $user,
+  'password' => $password,
+  'dbname'   => $dbname,
 ], $config);
 
 // obtaining the entity manager
 $entityManager = new EntityManager($connection, $config);
-
+$user = new User();
+$user->setName('Mathis ROME');
+$entityManager->persist($user);
+$entityManager->flush();
 // var_dump($entityManager);
 
 
@@ -65,7 +75,10 @@ $twig = new Environment($loader, [
 ]);
 
 // Appeler un routeur pour lui transférer la requête
-$router = new Router($twig);
+$router = new Router([
+  Environment::class => $twig,
+  EntityManager::class => $entityManager
+]);
 $router->addRoute(
   'homepage',
   '/',
@@ -80,6 +93,18 @@ $router->addRoute(
   ContactController::class,
   'contact'
 );
+
+$router->addRoute(
+  'user_create',
+  '/user/create',
+  'GET',
+  UserController::class,
+  'create'
+);
+
+if (php_sapi_name() === 'cli') {
+  return;
+}
 
 try {
   $router->execute($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

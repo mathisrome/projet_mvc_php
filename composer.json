@@ -21,9 +21,7 @@
   "require": {
     "symfony/dotenv": "^6.2",
     "twig/twig": "^3.6",
-    "doctrine/orm": "^2.11.0",
-    "doctrine/dbal": "^3.2",
-    "symfony/yaml": "^5.4",
-    "symfony/cache": "^5.4"
+    "doctrine/orm": "^2.15",
+    "symfony/cache": "^6.3"
   }
 }
