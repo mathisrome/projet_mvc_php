@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
+use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\Table;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\GeneratedValue;
 
-#[Entity]
+#[Entity(repositoryClass: UserRepository::class)]
 #[Table('users')]
 class User
 {
