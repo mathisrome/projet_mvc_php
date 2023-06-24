@@ -38,18 +38,7 @@ class Session
      */
     public function set($key, $value): static
     {
-        if (!isset($key)) {
-            throw new Exception("Session key cannot be empty", 1);
-        }
-
-        if (is_array($key)) {
-            foreach ($key as $sessionKey => $sessionValue) {
-                $_SESSION[$sessionKey] = $sessionValue;
-            }
-        } else {
-            $_SESSION[$key] = $value;
-        }
-
+        $_SESSION[$key] = $value;
         return $this;
     }
 
@@ -60,10 +49,9 @@ class Session
      */
     public function get($key): mixed
     {
-        if (!isset($key)) {
-            throw new Exception("Session key cannot be empty", 1);
+        if(!$this->has($key)) {
+            throw new Exception("{$key} not found in session");
         }
-
         return $_SESSION[$key];
     }
 
@@ -74,10 +62,6 @@ class Session
      */
     public function has($key): bool
     {
-        if (!isset($key)) {
-            throw new Exception("Session key cannot be empty", 1);
-        }
-
         return isset($_SESSION[$key]);
     }
 
@@ -88,12 +72,7 @@ class Session
      */
     public function remove($key): static
     {
-        if (!isset($key)) {
-            throw new Exception("Session key cannot be empty", 1);
-        }
-
         unset($_SESSION[$key]);
-
         return $this;
     }
 
