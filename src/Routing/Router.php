@@ -2,91 +2,96 @@
 
 namespace App\Routing;
 
+use Psr\Container\ContainerInterface;
+use ReflectionException;
 use ReflectionMethod;
-use Twig\Environment;
 
 class Router
 {
-  public function __construct(
-    private array $services
-  ) {
-  }
-
-  private array $routes = [];
-
-  public function addRoute(
-    string $name,
-    string $url,
-    string $httpMethod,
-    string $controllerClass,
-    string $controllerMethod
-  ) {
-    $this->routes[] = [
-      'name' => $name,
-      'url' => $url,
-      'http_method' => $httpMethod,
-      'controller' => $controllerClass,
-      'method' => $controllerMethod
-    ];
-  }
-
-  public function getRoute(string $uri, string $httpMethod): ?array
-  {
-    foreach ($this->routes as $route) {
-      if ($route['url'] === $uri && $route['http_method'] === $httpMethod) {
-        return $route;
-      }
+    public function __construct(private ContainerInterface $container)
+    {
     }
 
-    return null;
-  }
+    private array $routes = [];
 
-  /**
-   * @param string $requestUri
-   * @param string $httpMethod
-   * @return void
-   * @throws RouteNotFoundException
-   */
-  public function execute(string $requestUri, string $httpMethod)
-  {
-    $route = $this->getRoute($requestUri, $httpMethod);
-
-    if ($route === null) {
-      throw new RouteNotFoundException($requestUri, $httpMethod);
+    public function addRoute(
+        string $name,
+        string $url,
+        string $httpMethod,
+        string $controllerClass,
+        string $controllerMethod
+    )
+    {
+        $this->routes[] = [
+            'name' => $name,
+            'url' => $url,
+            'http_method' => $httpMethod,
+            'controller' => $controllerClass,
+            'method' => $controllerMethod
+        ];
     }
 
-    $controllerClass = $route['controller'];
-    $method = $route['method'];
+    public function getRoute(string $uri, string $httpMethod): ?array
+    {
+        foreach ($this->routes as $route) {
+            if ($route['url'] === $uri && $route['http_method'] === $httpMethod) {
+                return $route;
+            }
+        }
 
-    $classInfos = new \ReflectionClass($controllerClass);
-    $constructorInfos = $classInfos->getConstructor();
-    $contructorParams = $constructorInfos->getParameters();
-
-    $params = [];
-    foreach ($contructorParams as $param) {
-      $paramType = $param->getType();
-      $typeName = $paramType->getName();
-
-      if (array_key_exists($typeName, $this->services)) {
-        $params[] = $this->services[$typeName];
-      }
+        return null;
     }
 
-    $controllerInstance = new $controllerClass(...$params);
+    /**
+     * @param string $requestUri
+     * @param string $httpMethod
+     * @return void
+     * @throws RouteNotFoundException
+     */
+    public function execute(string $requestUri, string $httpMethod)
+    {
+        $route = $this->getRoute($requestUri, $httpMethod);
 
-    $methodInfos = new ReflectionMethod($controllerClass . '::' . $method);
-    $methodParams = $methodInfos->getParameters();
+        if ($route === null) {
+            throw new RouteNotFoundException($requestUri, $httpMethod);
+        }
 
-    $params = [];
-    foreach ($methodParams as $methodParam) {
-      $paramType = $methodParam->getType();
-      $typeName = $paramType->getName();
+        $controllerClass = $route['controller'];
+        $method = $route['method'];
 
-      if (array_key_exists($typeName, $this->services)) {
-        $params[] = $this->services[$typeName];
-      }
+        $constructorParams = $this->getMethodParams($controllerClass . '::__construct');
+        $controllerInstance = new $controllerClass(...$constructorParams);
+
+        $controllerParams = $this->getMethodParams($controllerClass . '::' . $method);
+        echo $controllerInstance->$method(...$controllerParams);
     }
 
-    echo $controllerInstance->$method(...$params);
-  }
+    /**
+     * Get an array containing services instances guessed from method signature
+     *
+     * @param string $method Format : FQCN::method
+     * @return array The services to inject
+     */
+    private function getMethodParams(string $method): array
+    {
+        $params = [];
+
+        try {
+            $methodInfos = new ReflectionMethod($method);
+        } catch (ReflectionException $e) {
+            return [];
+        }
+        $methodParams = $methodInfos->getParameters();
+
+        foreach ($methodParams as $methodParam) {
+            $paramType = $methodParam->getType();
+            $paramTypeName = $paramType->getName();
+
+            if ($this->container->has($paramTypeName)){
+                $params[] = $this->container->get($paramTypeName);
+            }
+        }
+
+        return $params;
+    }
 }

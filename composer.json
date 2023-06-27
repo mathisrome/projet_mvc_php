@@ -22,6 +22,7 @@
     "symfony/dotenv": "^6.2",
     "twig/twig": "^3.6",
     "doctrine/orm": "^2.15",
-    "symfony/cache": "^6.3"
+    "symfony/cache": "^6.3",
+    "psr/container": "^2.0"
   }
 }

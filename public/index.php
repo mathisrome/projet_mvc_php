@@ -6,6 +6,7 @@ if (php_sapi_name() !== 'cli' && preg_match('/\.(png|ico|jpg|js|css)$/', $_SERVE
 }
 
 // Initialisation de certaines choses
+use App\DependencyInjection\Container;
 use App\Entity\User;
 use Twig\Environment;
 use App\Routing\Router;
@@ -49,22 +50,22 @@ $config = ORMSetup::createAttributeMetadataConfiguration(
 );
 
 // configuring the database connection
-$connection = DriverManager::getConnection([
-  'host' => $host,
-  'port' => $port,
-  'driver' => 'pdo_mysql',
-  'user'     => $user,
-  'password' => $password,
-  'dbname'   => $dbname,
-], $config);
+try {
+    $connection = DriverManager::getConnection([
+        'host' => $host,
+        'port' => $port,
+        'driver' => 'pdo_mysql',
+        'user' => $user,
+        'password' => $password,
+        'dbname' => $dbname,
+    ], $config);
+} catch (\Doctrine\DBAL\Exception $e) {
+    echo $e->getMessage();
+}
 
 // obtaining the entity manager
 $entityManager = new EntityManager($connection, $config);
-$user = new User();
-$user->setName('Mathis ROME');
-$entityManager->persist($user);
-$entityManager->flush();
-// var_dump($entityManager);
+//var_dump($entityManager);
 
 
 // Twig
@@ -74,11 +75,11 @@ $twig = new Environment($loader, [
   'cache' => __DIR__ . '/../var/twig/',
 ]);
 
+$serviceContainer = new Container();
+$serviceContainer->set(Environment::class, $twig);
+$serviceContainer->set(EntityManager::class, $entityManager);
 // Appeler un routeur pour lui transférer la requête
-$router = new Router([
-  Environment::class => $twig,
-  EntityManager::class => $entityManager
-]);
+$router = new Router($serviceContainer);
 $router->addRoute(
   'homepage',
   '/',
