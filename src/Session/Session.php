@@ -33,9 +33,6 @@ class Session
         return $this->sessionId;
     }
 
-    /**
-     * @throws Exception
-     */
     public function set($key, $value): static
     {
         $_SESSION[$key] = $value;
@@ -58,7 +55,6 @@ class Session
     /**
      * @param $key
      * @return bool
-     * @throws Exception
      */
     public function has($key): bool
     {
@@ -68,7 +64,6 @@ class Session
     /**
      * @param $key
      * @return $this
-     * @throws Exception
      */
     public function remove($key): static
     {
