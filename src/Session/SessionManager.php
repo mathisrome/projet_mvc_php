@@ -4,16 +4,16 @@ namespace App\Session;
 
 use Exception;
 
-class Session
+class SessionManager
 {
     protected $sessionId;
 
     /**
-     * Session constructor.
+     * SessionManager constructor.
      */
     public function __construct()
     {
-        if(!isset($_SESSION)) {
+        if (!isset($_SESSION)) {
             session_start();
         }
 
@@ -46,7 +46,7 @@ class Session
      */
     public function get($key): mixed
     {
-        if(!$this->has($key)) {
+        if (!$this->has($key)) {
             throw new Exception("{$key} not found in session");
         }
         return $_SESSION[$key];
