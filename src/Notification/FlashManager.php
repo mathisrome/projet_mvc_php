@@ -2,22 +2,19 @@
 
 namespace App\Notification;
 
+use FlashType;
+
 class FlashManager
 {
-    const SUCCESS = 'success';
-    const INFO = 'info';
-    const WARNING = 'warning';
-    const ERROR = 'error';
-
     /**
      * Create a flash message
      *
+     * @param FlashType $type
      * @param string $message
-     * @param string $type
      * @return void
      */
-    public function create(string $type, string $message): void
+    public function create(FlashType $type, string $message): void
     {
-        $_SESSION['flash'][$type] = ['message' => $message];
+        $_SESSION['flash'][$type->value][] = ['message' => $message];
     }
 }
