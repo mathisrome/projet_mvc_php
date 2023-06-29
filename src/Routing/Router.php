@@ -2,17 +2,21 @@
 
 namespace App\Routing;
 
+use App\Routing\Attribute\Route;
+use App\Utils\Filesystem;
 use Psr\Container\ContainerInterface;
+use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 
 class Router
 {
+    private const CONTROLLERS_GLOB_PATH = __DIR__ . "/../Controller/*Controller.php";
+    private array $routes = [];
+
     public function __construct(private ContainerInterface $container)
     {
     }
-
-    private array $routes = [];
 
     public function addRoute(
         string $name,
@@ -87,11 +91,54 @@ class Router
             $paramType = $methodParam->getType();
             $paramTypeName = $paramType->getName();
 
-            if ($this->container->has($paramTypeName)){
+            if ($this->container->has($paramTypeName)) {
                 $params[] = $this->container->get($paramTypeName);
             }
         }
 
         return $params;
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function registerRoutes(): void
+    {
+        // Explorer le dossier des classes de contrôleurs
+        // Pour chacun d'eux, enregistrer les méthodes
+        // donc les contrôleurs portant un attribut Route
+        $classNames = Filesystem::getClassNames(self::CONTROLLERS_GLOB_PATH);
+
+        foreach ($classNames as $class) {
+            $fqcn = "App\\Controller\\" . $class;
+            $classInfos = new ReflectionClass($fqcn);
+
+            if ($classInfos->isAbstract()) {
+                continue;
+            }
+
+            $methods = $classInfos->getMethods(ReflectionMethod::IS_PUBLIC);
+
+            foreach ($methods as $method) {
+                if ($method->isConstructor()) {
+                    continue;
+                }
+
+                $attributes = $method->getAttributes(Route::class);
+
+                if (!empty($attributes)) {
+                    $routeAttribute = $attributes[0];
+                    /** @var Route */
+                    $routeInstance = $routeAttribute->newInstance();
+                    $this->addRoute(
+                        $routeInstance->getName(),
+                        $routeInstance->getPath(),
+                        $routeInstance->getHttpMethod(),
+                        $fqcn,
+                        $method->getName()
+                    );
+                }
+            }
+        }
     }
 }

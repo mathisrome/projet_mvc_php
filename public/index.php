@@ -80,28 +80,7 @@ $serviceContainer->set(Environment::class, $twig);
 $serviceContainer->set(EntityManager::class, $entityManager);
 // Appeler un routeur pour lui transférer la requête
 $router = new Router($serviceContainer);
-$router->addRoute(
-  'homepage',
-  '/',
-  'GET',
-  IndexController::class,
-  'home'
-);
-$router->addRoute(
-  'contact_page',
-  '/contact',
-  'GET',
-  ContactController::class,
-  'contact'
-);
-
-$router->addRoute(
-  'user_create',
-  '/user/create',
-  'GET',
-  UserController::class,
-  'create'
-);
+$router->registerRoutes();
 
 if (php_sapi_name() === 'cli') {
   return;
