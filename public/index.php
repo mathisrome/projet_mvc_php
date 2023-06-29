@@ -8,6 +8,7 @@ if (php_sapi_name() !== 'cli' && preg_match('/\.(png|ico|jpg|js|css)$/', $_SERVE
 // Initialisation de certaines choses
 use App\DependencyInjection\Container;
 use App\Entity\User;
+use App\Utils\Finder;
 use Twig\Environment;
 use App\Routing\Router;
 use Doctrine\ORM\ORMSetup;
@@ -75,9 +76,21 @@ $twig = new Environment($loader, [
   'cache' => __DIR__ . '/../var/twig/',
 ]);
 
+$finder = new Finder();
+$entities = $finder->getEntities();
+
+$repos = [];
+foreach ($entities as $key => $entity) {
+    $repo = $entityManager->getRepository($entity);
+    $repos[$repo::class] = $repo;
+}
+
 $serviceContainer = new Container();
 $serviceContainer->set(Environment::class, $twig);
 $serviceContainer->set(EntityManager::class, $entityManager);
+foreach ($repos as $key => $repo) {
+    $serviceContainer->set($key, $repo);
+}
 // Appeler un routeur pour lui transférer la requête
 $router = new Router($serviceContainer);
 $router->registerRoutes();

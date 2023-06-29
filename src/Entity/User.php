@@ -20,6 +20,11 @@ class User
     #[Column(type: 'string', length: 255)]
     private string $name;
 
+    public function __toString(): string
+    {
+        return $this->name;
+    }
+
     /**
      * Get the value of id
      *
