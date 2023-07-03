@@ -24,15 +24,6 @@ class Finder
         return $subscribers;
     }
 
-    /**
-     * Non utilisé pour l'instant (Et je pense pas l'utilisé lol)
-     * @return array
-     */
-    public function getRepositories(): array
-    {
-        return $this->getClass(__DIR__ . '/../Repository/', 'App\\Repository\\');
-    }
-
     public function getEntities(){
         return $this->getClass(__DIR__ . '/../Entity/', 'App\\Entity\\');
     }
