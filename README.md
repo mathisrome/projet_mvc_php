@@ -8,26 +8,60 @@
 
 ## Ce que nous avons amélioré
 
-Les améliorations sur lesquelles nous nous sommes penchés sont les suivantes : 
+Les améliorations sur lesquelles nous nous sommes penchés sont les suivantes :
 
 - Gestionnaire de session + enregistrement de celui-ci en tant que service
 - Enregistrement des repositories de nos entités en tant que service
+- Messages flash
 
 ### Gestionnaire de session
 
-Dans un premier tant rappelons l'utilité d'une session. 
+Dans un premier tant rappelons l'utilité d'une session.
 
-Une session est un mécanisme permmettant de stocker des informations spécifiques à un utilisateur pendant sa navigation sur un site web.
+Une session est un mécanisme permettant de stocker des informations spécifiques à un utilisateur pendant sa navigation
+sur un site web.
 
-Le gestionnaire permetterai donc, par exemple, de faciliter l'accès/l'enregistrement des donneés enregistrer dans la session et ainsi permettre aux développeurs d'accéder à ce gestionnaire sur l'entièreté des servcies.
+Le gestionnaire permettrait donc, par exemple, de faciliter l'accès/l'enregistrement des données enregistrer dans la
+session et ainsi permettre aux développeurs d'accéder à ce gestionnaire sur l'entièreté des services.
 
-... Écrire la suite car pas d'idée
+Dans notre cas, nous avons créé une classe Session permettant de facilement manipuler cette dernière.
+Elle est notamment utilisée pour l'enregistrement et la diffusion des messages flash. Cette classe est instanciée dans
+notre fichier principal `main.php`. Ainsi, chaque utilisateur possède sa propre session à son arrivée.
+
+Exemple d'utilisation du Session Manager :
+```php
+// Instanciation
+$sessionManager = new SessionManager();
+
+// Stocker une information dans la session
+$sessionManager->set('test', 'ceci est un message de test');
+
+// Récupérer une donnée
+$test = $sessionManager->get('test');
+
+// Supprimer une donnée
+$sessionManager->remove('test');
+
+// Récupérer toute la session
+$all = $sessionManager->all();
+
+// Récupérer l'ID de la session
+$sessionManager->getId();
+
+// Tester si une valeur existe dans la session
+$sessionManager->has('test');
+
+// Détruire la session
+$sessionManager->destroy();
+```
 
 ### Enregistrement des repositories de nos entités en tant que service
 
-L'objectif de cette amélioration était d'enregistrer les repositories de nos entités en tant que service pour les contrôleurs.
+L'objectif de cette amélioration était d'enregistrer les repositories de nos entités en tant que service pour les
+controllers.
 
-Imaginons que nous créons une entité `user`. (Afin que celle-ci soit identifier en tant qu'entité nous avons besoin d'ajouter l'attribut PHP `Entity`)
+Imaginons que nous créons une entité `user`. (Afin que celle-ci soit identifiée en tant qu'entité, nous avons besoin
+d'ajouter l'attribut PHP `Entity`)
 
 ```php
 <?php
@@ -94,7 +128,7 @@ class User
 
 La première problématique que nous avons rencontrée était de savoir comment créer les repositories.
 
-Dans un premier temps, nous pouvons donc créer la classe `UserRepository`.
+Dans un premier temps, nous pouvons créer la classe `UserRepository`.
 
 ```php
 <?php
@@ -108,9 +142,10 @@ class UserRepository
 }
 ```
 
-Dans un second temps, dans la documentation de ORM, il nous est indiqué que pour qu'une classe soit identifiée comme repository, il suffit de l'étendre à la classe `EntityRepository`.  
+Dans un second temps, dans la documentation de ORM, il nous est indiqué que pour qu'une classe soit identifiée comme
+repository, il suffit de l'étendre à la classe `EntityRepository`.
 
-Notre classe ressemble donc maintenant à ça : 
+Notre classe ressemble donc à ça :
 
 ```php
 <?php
@@ -124,7 +159,8 @@ class UserRepository extends EntityRepository
 }
 ```
 
-Troisièmement nous avons besoin que notre repository soit référencé à notre classe `User` pour faire cela, nous devons ajouter dans l'attribut PHP 8 `Entity` le paramètre `repositoyClass` à celle-ci.
+Pour continuer, nous avons besoin que notre repository soit référencé à notre classe `User`. Pour faire cela, nous
+devons ajouter dans l'attribut PHP 8 `Entity` le paramètre `repositoyClass` à celle-ci :
 
 ```php
 ...
@@ -136,13 +172,16 @@ class User
 }
 ```
 
-Une fois, ceci fait, ça y est le repository de notre entité `User` a été créer et le repository est référencé à celle-ci.
+Une fois ceci fait, le repository de notre entité `User` a été créé et le repository est référencé à celle-ci.
 
 La suite de l'objectif était donc d'instancier les repositories en tant que service à notre classe `Routing`.
 
-Cependant, une problématique nous arrête : comment faire pour connaître les repositories créer par le développeur sans les renseigner à la main ?
+Cependant, une problématique nous arrête : comment faire pour connaître les repositories créées par le développeur
+sans les renseigner à la main ?
 
-Nous avons décidé de partir sur l'idée de créer une classe `Finder` qui permettra de récupérer la liste de toutes les entités et ainsi grâce à des méthodes de la classe `EntityManager` d'instancier les repositories dans la classe `Routing`
+Nous avons décidé de partir sur l'idée de créer une classe `Finder` qui permettra de récupérer la liste de toutes les
+entités. Ainsi, grâce à des méthodes de la classe `EntityManager`, nous pourront instancier les repositories dans la
+classe `Routing`.
 
 La classe `Finder` :
 
@@ -192,7 +231,7 @@ foreach ($entities as $key => $entity) {
 }
 ```
 
-Enregistrement des repositories dans le container et mise dans celui-ci dans la classe `Routing` :
+Enregistrement des repositories dans le conteneur et mise dans celui-ci dans la classe `Routing` :
 
 ```php
 $serviceContainer = new Container();
@@ -205,20 +244,27 @@ foreach ($repos as $key => $repo) {
 $router = new Router($serviceContainer);
 ```
 
-Et voilà nous avons mis en place le système permettant d'ajouter nos repositories dans notre container.
+Nous venons de mettre en place le système permettant d'ajouter nos repositories dans notre conteneur.
+
+### Messages Flash
+TODO
 
 ## Ce que le projet nous a apporté
 
 Loan : ??
 
-Mathis : en ce qui me concerne, ce cours et ce projet, m'a permis de mieux comprendre comment le framework Symfony fonctionne, puisque ce projet MVC est très inspiré de son fonctionnement.
+Mathis : en ce qui me concerne, ce cours et ce projet, m'ont permis de mieux comprendre comment le framework Symfony
+fonctionne, puisque ce projet MVC est très inspiré de son fonctionnement.
 
 ## Ce que nous pourrions améliorer
 
 ### Gestionnaire de session
 
-Concernant les gestionnaire de session...
+Nous pourrons rendre le gestionnaire de session plus complexe en ajoutant des méthodes permettant la gestion des cookies
+et requêtes. Nous pourrions également ajouter des méthodes permettant de gérer les sessions en base de données.
 
 ### Enregistrement des repositories en tant que service
 
 À ce stade les repositories sont instanciés en tant que service uniquement pour la classe `Router` et les contrôleurs de notre application. Cependant, nous pourrions améliorer le processus en faisant en sorte que ceux-ci soient généralisées à tous les services.
+
+### Messages Flash
