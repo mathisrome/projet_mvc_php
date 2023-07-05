@@ -2,12 +2,14 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 if (php_sapi_name() !== 'cli' && preg_match('/\.(png|ico|jpg|js|css)$/', $_SERVER['REQUEST_URI'])) {
-  return false;
+    return false;
 }
 
 // Initialisation de certaines choses
 use App\DependencyInjection\Container;
 use App\Entity\User;
+use App\Notification\FlashManager;
+use App\Session\SessionManager;
 use App\Utils\Finder;
 use Twig\Environment;
 use App\Routing\Router;
@@ -26,12 +28,12 @@ $dotenv->loadEnv(__DIR__ . '/../.env');
 
 // DB
 [
-  'DB_HOST'     => $host,
-  'DB_PORT'     => $port,
-  'DB_NAME'     => $dbname,
-  'DB_CHARSET'  => $charset,
-  'DB_USER'     => $user,
-  'DB_PASSWORD' => $password
+    'DB_HOST' => $host,
+    'DB_PORT' => $port,
+    'DB_NAME' => $dbname,
+    'DB_CHARSET' => $charset,
+    'DB_USER' => $user,
+    'DB_PASSWORD' => $password
 ] = $_ENV;
 
 // $dsn = "mysql:dbname=$dbname;host=$host:$port;charset=$charset";
@@ -46,8 +48,8 @@ $dotenv->loadEnv(__DIR__ . '/../.env');
 
 // Create a simple "default" Doctrine ORM configuration for Attributes
 $config = ORMSetup::createAttributeMetadataConfiguration(
-  paths: array(__DIR__ . "/../src/Entity"),
-  isDevMode: $_ENV['APP_ENV'] === 'dev',
+    paths: array(__DIR__ . "/../src/Entity"),
+    isDevMode: $_ENV['APP_ENV'] === 'dev',
 );
 
 // configuring the database connection
@@ -68,13 +70,16 @@ try {
 $entityManager = new EntityManager($connection, $config);
 //var_dump($entityManager);
 
+// SessionManager
+$sessionManager = new SessionManager();
 
 // Twig
 $loader = new FilesystemLoader(__DIR__ . '/../templates/');
 $twig = new Environment($loader, [
-  'debug' => $_ENV['APP_ENV'] === 'dev',
-  'cache' => __DIR__ . '/../var/twig/',
+    'debug' => $_ENV['APP_ENV'] === 'dev',
+    'cache' => __DIR__ . '/../var/twig/',
 ]);
+$twig->addGlobal('flashes', $_SESSION['flash'] ?? []);
 
 $finder = new Finder();
 $entities = $finder->getEntities();
@@ -92,16 +97,41 @@ foreach ($repos as $key => $repo) {
     $serviceContainer->set($key, $repo);
 }
 // Appeler un routeur pour lui transférer la requête
-$router = new Router($serviceContainer);
-$router->registerRoutes();
+$router = new Router([
+    Environment::class => $twig,
+    EntityManager::class => $entityManager,
+    FlashManager::class => new FlashManager(),
+]);
+$router->addRoute(
+    'homepage',
+    '/',
+    'GET',
+    IndexController::class,
+    'home'
+);
+$router->addRoute(
+    'contact_page',
+    '/contact',
+    'GET',
+    ContactController::class,
+    'contact'
+);
+
+$router->addRoute(
+    'user_create',
+    '/user/create',
+    'GET',
+    UserController::class,
+    'create'
+);
 
 if (php_sapi_name() === 'cli') {
-  return;
+    return;
 }
 
 try {
-  $router->execute($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+    $router->execute($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
 } catch (RouteNotFoundException $ex) {
-  http_response_code(404);
-  echo "Page not found";
+    http_response_code(404);
+    echo "Page not found";
 }
