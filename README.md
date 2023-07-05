@@ -247,11 +247,34 @@ $router = new Router($serviceContainer);
 Nous venons de mettre en place le système permettant d'ajouter nos repositories dans notre conteneur.
 
 ### Messages Flash
-TODO
+L'objectif de cette amélioration était de mettre en place un système de messages à travers les requêtes. Nous avons donc
+créé une classe `FlashManager` qui permet de stocker les messages et de les afficher dans la vue. Voici un exemple de
+création d'un message flash dans un controller :
+
+```php
+$this->flash->create('success', 'Welcome to the homepage');
+```
+
+Pour afficher les messages dans la vue, nous avons créé une variable `flashes` qui contient tous les messages flash et
+nous nous occupons de les afficher dans le template twig de base de l'application :
+
+```php
+{% for label, messages in flashes %}
+    {% for message in messages %}
+        <h1 class="text-{{ label }}">{{ message }}</h1>
+    {% endfor %}
+{% endfor %}
+```
+
+Un message flash possède un type et le contenu du message. Il existe 4 types de messages : `success`, `info`, `warning`
+et `error` créé initialement. Cependant, vous pouvez renseigner le type que vous souhaitez ; même créer le vôtre.
+Les types sont renseignés dans le fichier `FlashType.php`.
 
 ## Ce que le projet nous a apporté
 
-Loan : ??
+Loan : Ce projet m'a permis de mieux comprendre le fonctionnement d'un framework MVC. J'ai pu apprendre à utiliser PHP
+d'une autre façon que j'ai pu apprendre les années précédentes. Ce cours m'a également offert une nouvelle chance
+d'utiliser ce langage.
 
 Mathis : en ce qui me concerne, ce cours et ce projet, m'ont permis de mieux comprendre comment le framework Symfony
 fonctionne, puisque ce projet MVC est très inspiré de son fonctionnement.
@@ -268,3 +291,7 @@ et requêtes. Nous pourrions également ajouter des méthodes permettant de gér
 À ce stade les repositories sont instanciés en tant que service uniquement pour la classe `Router` et les contrôleurs de notre application. Cependant, nous pourrions améliorer le processus en faisant en sorte que ceux-ci soient généralisées à tous les services.
 
 ### Messages Flash
+
+Une gestion plus approfondie des messages flash pourrait être faite. Par exemple, nous pourrions ajouter de diverses
+méthodes ou encore créer un système permettant l'affichage de ces derniers en précisant un temps avant que cela
+n'arrive.
