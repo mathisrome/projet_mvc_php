@@ -93,37 +93,13 @@ foreach ($entities as $key => $entity) {
 $serviceContainer = new Container();
 $serviceContainer->set(Environment::class, $twig);
 $serviceContainer->set(EntityManager::class, $entityManager);
+$serviceContainer->set(FlashManager::class, new FlashManager());
 foreach ($repos as $key => $repo) {
     $serviceContainer->set($key, $repo);
 }
 // Appeler un routeur pour lui transférer la requête
-$router = new Router([
-    Environment::class => $twig,
-    EntityManager::class => $entityManager,
-    FlashManager::class => new FlashManager(),
-]);
-$router->addRoute(
-    'homepage',
-    '/',
-    'GET',
-    IndexController::class,
-    'home'
-);
-$router->addRoute(
-    'contact_page',
-    '/contact',
-    'GET',
-    ContactController::class,
-    'contact'
-);
-
-$router->addRoute(
-    'user_create',
-    '/user/create',
-    'GET',
-    UserController::class,
-    'create'
-);
+$router = new Router($serviceContainer);
+$router->registerRoutes();
 
 if (php_sapi_name() === 'cli') {
     return;

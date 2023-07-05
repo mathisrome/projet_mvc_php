@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManager;
 
 class UserController extends AbstractController
 {
+
     #[Route("/user/create", name: "user_create")]
     public function create(EntityManager $em)
     {
